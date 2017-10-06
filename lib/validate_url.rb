@@ -16,18 +16,33 @@ module ActiveModel
       end
 
       def validate_each(record, attribute, value)
-        schemes = [*options.fetch(:schemes)].map(&:to_s)
         begin
           uri = URI.parse(value)
-          unless uri && uri.host && schemes.include?(uri.scheme) && (!options.fetch(:no_local) || uri.host.include?('.'))
-            record.errors.add(attribute, :url, filtered_options(value))
+
+          if uri.blank?
+            return record.errors.add(attribute, :url, filtered_options(value))
           end
+
+          validate_host!(record, attribute, uri, value) if uri.host.present?
+          validate_schema!(record, attribute, uri, value)
         rescue URI::InvalidURIError
           record.errors.add(attribute, :url, filtered_options(value))
         end
       end
 
       protected
+
+      def validate_host!(record, attribute, uri, value)
+        return if !options.fetch(:no_local) && uri.host.include?('localhost')
+        return if uri.host.include?('.')
+        record.errors.add(attribute, :host, filtered_options(value))
+      end
+
+      def validate_schema!(record, attribute, uri, value)
+        schemes = [*options.fetch(:schemes)].map(&:to_s)
+        return if schemes.include?(uri.scheme) && uri.host.present?
+        record.errors.add(attribute, :schema)
+      end
 
       def filtered_options(value)
         filtered = options.except(*RESERVED_OPTIONS)

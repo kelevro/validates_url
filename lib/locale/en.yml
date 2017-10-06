@@ -1,4 +1,6 @@
 en:
   errors:
     messages:
-      url: is not a valid URL
+      url: "A LINK IS NOT A VALID URL"
+      domain: "A LINK IS NOT A VALID URL"
+      schema:  "Please include http:// or https:// in your URL"
